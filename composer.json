@@ -1,0 +1,27 @@
+{
+  "name": "wiperawa/mapper",
+  "description": "Object mapper traits to export/hydrate objects",
+  "keywords": ["object mapper", "mapper"],
+  "type": "library",
+  "license": "MIT",
+  "support": {
+    "issues": "https://github.com/wiperawa/mapper/issues",
+    "wiki": "https://github.com/wiperawa/mapper/wiki/",
+    "source": "https://github.com/wiperawa/mapper"
+  },
+  "authors": [
+    {
+      "name": "Dmitriy Lukeryanov",
+      "email": "wiperawa@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^7"
+  },
+  "autoload": {
+    "psr-4": { "wiperawa\\mapper\\": "" }
+  }
+}
