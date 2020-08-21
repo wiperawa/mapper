@@ -6,8 +6,14 @@ namespace wiperawa\mapper;
 Class Mapper
 {
 
+    /**
+     * @var array Map of fields of exporting/hydrating model
+     */
     private $map = [];
 
+    /**
+     * @var array ignored fields
+     */
     private $ignoredFields = [];
 
     /**
@@ -29,7 +35,7 @@ Class Mapper
     /**
      *
      * @param $source
-     * @param string|array|object $target
+     * @param string|array|object $target defaults to []
      * @param array $fields
      * @return mixed
      */
@@ -116,6 +122,13 @@ Class Mapper
         return $new;
     }
 
+    /**
+     * Returns object fields, if map isn't set.
+     * first trying to call [[fields()]] on object, if cant, then getting just object vars.
+     * *fields() function used in Yii2 framework, for example, to return object real/virtual fields.
+     * @param object $object
+     * @return array
+     */
     private function getObjectFields(object $object): array {
         $fields = method_exists($object,'fields') ?
             $object->fields() :
