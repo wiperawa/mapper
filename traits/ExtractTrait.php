@@ -5,7 +5,7 @@ namespace wiperawa\mapper\traits;
 
 
 trait ExtractTrait {
-    
+
     /**
      * Export object fields listed at [[fieldsToExtract()]] to $target
      * $target can either be array, object, or a className
@@ -13,7 +13,7 @@ trait ExtractTrait {
      * @param string|object|array $target
      * @return mixed
      */
-    public function extract($target){
+    public function extract($target = []){
 
         return $this->extractFields($target, $this->fieldsToExtract());
     }
@@ -45,12 +45,11 @@ trait ExtractTrait {
             $targetFieldName = ( is_int($targetFieldName) ? $sourceFieldName : $targetFieldName );
 
             $value = $this->resolveValue($sourceFieldName);
-
             if (is_array($result)) {
                 $result[$targetFieldName] = $value;
 
             } else {
-                $result = $this->fillObjectField($target, $targetFieldName, $value);
+                $this->setObjectField($result, $targetFieldName, $value);
             }
         }
 
@@ -121,7 +120,6 @@ trait ExtractTrait {
     }
 
 
-
     /*
      * Resolving value depends on FieldName of exporting object
      *
@@ -130,15 +128,17 @@ trait ExtractTrait {
     private function resolveValue($sourceFieldName) {
 
         if (is_string($sourceFieldName)) {
-            return $this->getNestedValue($sourceFieldName, $this);
+            return $this->getNestedValue($this, $sourceFieldName);
         }
 
         if (is_callable($sourceFieldName)) {
-            return call_user_func($sourceFieldName, [$this]);
+            return call_user_func($sourceFieldName, $this);
         }
 
         if (is_array($sourceFieldName) ){
-            if (!empty($sourceFieldName) && class_exists(($targetClassName = reset($sourceFieldName)))) {
+            if (!empty($sourceFieldName) &&
+                is_string($targetClassName = reset($sourceFieldName)) &&
+                class_exists($targetClassName)) {
 
                 return $this->extractFields(
                     new $targetClassName,
@@ -160,12 +160,14 @@ trait ExtractTrait {
      * @param object $context
      * @return mixed
      */
-    private function getNestedValue(string $fieldName, object $context) {
-        $nestedFields = explode('.',$fieldName);
+    private function getNestedValue(object $context, string $fieldName) {
+
+        $nestedFields = explode('.', $fieldName);
         if (count($nestedFields) === 1) {
             return $context->$fieldName;
+
         } else {
-            return $this->getNestedValue($nestedFields[1], $context->$fieldName);
+            return $this->getNestedValue($context->{$nestedFields[0]}, $nestedFields[1] );
         }
 
     }
@@ -177,22 +179,27 @@ trait ExtractTrait {
      * @param object $obj
      * @param string $fieldName
      * @param mixed $value
-     * @return object
+     * @return void
      * @throws \Error
      */
-    private function fillObjectField (object $obj, string $fieldName, $value): object {
-        $result = clone $obj;
+    private function setObjectField (object $obj, string $fieldName, $value){
+
+        $nestedFields = explode('.', $fieldName);
+        if (count($nestedFields) > 1) {
+
+            $this->setObjectField($obj->{$nestedFields[0]}, $nestedFields[1], $value);
+        }
         try {
-            $result->$fieldName = $value;
-        } catch (\Error $e) {
+            $obj->$fieldName = $value;
+        } catch (\Error|\Exception $e) {
+
             $setter = 'set'.ucfirst($fieldName);
-            if (is_callable([$result, $setter])) {
-                $result->{$setter}($value);
-                return $result;
+            if (is_callable([$obj, $setter])) {
+                $obj->{$setter}($value);
+                return;
             }
             throw $e;
         }
-        return $result;
     }
 
 }
