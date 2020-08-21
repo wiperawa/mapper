@@ -1,28 +1,67 @@
 <?php
 declare(strict_types=1);
+
 namespace wiperawa\mapper\tests;
 
 use PHPUnit\Framework\TestCase;
-use wiperawa\mapper\tests\dto\ClosureDto;
-use wiperawa\mapper\tests\models\ClosureModel;
+use wiperawa\mapper\Mapper;
 
-class ClosureTest extends TestCase {
+class ClosureModel
+{
 
-    public function testClosureInExportFields(){
-        $model = new ClosureModel();
+    public $firstname = 'firstname';
+    public $lastname = 'lastname';
 
-        $ret = $model->extract();
+}
 
-        $this->assertEquals('firstname lastname',$ret['name']);
+class ClosureDto
+{
+    public $name;
+    public $address;
+}
+
+class ClosureTest extends TestCase
+{
+
+    private $mapper;
+
+    public function __construct($name = null, array $data = [], $dataName = '')
+    {
+        $this->mapper = (new Mapper())
+            ->setMap([
+                'name' => function ($current) {
+                    return $current->firstname . ' ' . $current->lastname;
+                },
+                'address' => [
+                    'address' => function () {
+                        return 'lenina';
+                    },
+                    'city' => function () {
+                        return 'moscow';
+                    }
+                ]
+            ]);
+
+        parent::__construct($name, $data, $dataName);
     }
 
-    public function testClosureInNestedDtoField(){
+    public function testClosureInExportFields()
+    {
         $model = new ClosureModel();
 
-        $dto = $model->extract(ClosureDto::class);
+        $ret = $this->mapper->extract($model);
 
-        $this->assertEquals('moscow',$dto->address['city']);
-        $this->assertEquals('lenina',$dto->address['address']);
+        $this->assertEquals('firstname lastname', $ret['name']);
+    }
+
+    public function testClosureInNestedDtoField()
+    {
+        $model = new ClosureModel();
+
+        $dto = $this->mapper->extract($model,ClosureDto::class);
+
+        $this->assertEquals('moscow', $dto->address['city']);
+        $this->assertEquals('lenina', $dto->address['address']);
     }
 
 }
