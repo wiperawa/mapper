@@ -214,7 +214,7 @@ Class Mapper
      * @param string $fieldName
      * @param mixed $value
      * @return void
-     * @throws \Error
+     * @throws \Error|\Exception
      */
     private function setObjectField(object $obj, string $fieldName, $value)
     {
