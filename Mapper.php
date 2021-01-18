@@ -159,18 +159,18 @@ Class Mapper
     private function resolveValue(object $source,$sourceFieldName)
     {
 
-        if (is_string($sourceFieldName)) {
+        if (\is_string($sourceFieldName)) {
             return $this->getNestedValue($source, $sourceFieldName);
         }
 
-        if (is_callable($sourceFieldName)) {
+        if (\is_callable($sourceFieldName)) {
             return call_user_func($sourceFieldName, $source);
         }
 
-        if (is_array($sourceFieldName)) {
+        if (\is_array($sourceFieldName)) {
             if (!empty($sourceFieldName) &&
-                is_string($targetClassName = reset($sourceFieldName)) &&
-                class_exists($targetClassName)) {
+                \is_string($targetClassName = reset($sourceFieldName)) &&
+                \class_exists($targetClassName)) {
 
                 return $this->extractFields(
                     $source,
@@ -207,7 +207,7 @@ Class Mapper
 
     private function getObjectPropValue($object, $fieldName)
     {
-        if (array_key_exists($fieldName,get_object_vars($object))) {
+        if (\array_key_exists($fieldName,get_object_vars($object))) {
             return $object->$fieldName;
         }
 
@@ -245,7 +245,7 @@ Class Mapper
         } catch (\Error|\Exception $e) {
 
             $setter = 'set' . ucfirst($fieldName);
-            if (method_exists($obj, $setter)) {
+            if (\method_exists($obj, $setter)) {
                 $obj->{$setter}($value);
                 return;
             }
