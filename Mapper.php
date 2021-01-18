@@ -192,25 +192,30 @@ Class Mapper
      * @param string $fieldName
      * @param object $context
      * @return mixed
+     * @throws \Exception
      */
     private function getNestedValue(object $context, string $fieldName)
     {
+        $nestedFields = explode('.', $fieldName, 2);
 
-        $nestedFields = explode('.', $fieldName);
         if (count($nestedFields) === 1) {
-            if (array_key_exists($fieldName,get_object_vars($context))) {
-                return $context->$fieldName;
-            }
-
-            $getter = 'get'.ucfirst($fieldName) ;
-            if (\method_exists($context, $getter)) {
-                return $context->{$getter}();
-            }
-            throw new \Exception("cant't extract {$fieldName} property, check mapping!");
+           return $this->getObjectPropValue($context, $nestedFields[0]);
         } else {
-            return $this->getNestedValue($context->{$nestedFields[0]}, $nestedFields[1]);
+            return $this->getNestedValue($this->getObjectPropValue($context,$nestedFields[0]), $nestedFields[1]);
+        }
+    }
+
+    private function getObjectPropValue($object, $fieldName)
+    {
+        if (array_key_exists($fieldName,get_object_vars($object))) {
+            return $object->$fieldName;
         }
 
+        $getter = 'get'.ucfirst($fieldName) ;
+        if (\method_exists($object, $getter)) {
+            return $object->{$getter}();
+        }
+        throw new \Exception("can't extract {$fieldName} property, check mapping!");
     }
 
     /**
@@ -226,9 +231,8 @@ Class Mapper
     private function setObjectField(object $obj, string $fieldName, $value)
     {
 
-        $nestedFields = explode('.', $fieldName);
+        $nestedFields = explode('.', $fieldName, 2);
         if (count($nestedFields) > 1) {
-
             $this->setObjectField($obj->{$nestedFields[0]}, $nestedFields[1], $value);
         }
         try {
@@ -236,7 +240,7 @@ Class Mapper
         } catch (\Error|\Exception $e) {
 
             $setter = 'set' . ucfirst($fieldName);
-            if (is_callable([$obj, $setter])) {
+            if (method_exists($obj, $setter)) {
                 $obj->{$setter}($value);
                 return;
             }
