@@ -198,8 +198,15 @@ Class Mapper
 
         $nestedFields = explode('.', $fieldName);
         if (count($nestedFields) === 1) {
-            return $context->$fieldName;
+            if (array_key_exists($fieldName,get_object_vars($context))) {
+                return $context->$fieldName;
+            }
 
+            $getter = 'get'.ucfirst($fieldName) ;
+            if (\method_exists($context, $getter)) {
+                return $context->{$getter}();
+            }
+            throw new \Exception("cant't extract {$fieldName} property, check mapping!");
         } else {
             return $this->getNestedValue($context->{$nestedFields[0]}, $nestedFields[1]);
         }
